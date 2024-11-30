@@ -1,0 +1,30 @@
+input {
+  width: 200px;
+}
+
+#board {
+  display: grid;
+  grid-template-columns: repeat(8, 60px);
+  grid-template-rows: repeat(8, 60px);
+
+  width: min-content;
+  margin: 20px auto 0;
+}
+
+.square {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.light {
+  background-color: #aaa;
+}
+
+.dark {
+  background-color: #ccc;
+}
+
+.piece {
+  font-size: 48px;
+}
