@@ -80,9 +80,12 @@ socket.on("engine", ({ side, out }) => {
       const to = boardIndex(parts[1].slice(2, 4))
 
       const piece = board.children[from].children[0]
-
       board.children[from].removeChild(piece)
       board.children[to].appendChild(piece)
     }
   }
+})
+
+socket.on("checkmate", (side) => {
+  document.querySelector("#win").textContent = side + " wins"
 })

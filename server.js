@@ -36,6 +36,8 @@ io.on("connection", (socket) => {
 const handle = (side, out) => {
   out = out.trim()
 
+  io.emit("engine", { side, out })
+
   out.split("\n").forEach((line) => {
     const parts = line.split(" ")
     const command = parts[0]
@@ -45,20 +47,29 @@ const handle = (side, out) => {
     } else if (command === "readyok") {
       write(sides[side], "ucinewgame")
 
-      start
-        ? (write(sides.white, "position startpos"), write(sides.white, "go"))
-        : (start = true)
+      if (start) {
+        write(sides.white, "position startpos")
+        write(sides.white, "go")
+      } else {
+        start = true
+      }
     } else if (command === "bestmove") {
       chess.move(parts[1])
-      log.push(parts[1])
 
-      let other = side === "white" ? "black" : "white"
-      write(sides[other], log.join(" "))
-      write(sides[other], "go")
+      if (chess.isCheckmate()) {
+        write(sides.white, "quit")
+        write(sides.black, "quit")
+
+        io.emit("checkmate", side)
+      } else {
+        log.push(parts[1])
+
+        let other = side === "white" ? "black" : "white"
+        write(sides[other], log.join(" "))
+        write(sides[other], "go")
+      }
     }
   })
-
-  io.emit("engine", { side, out })
 }
 
 const write = (engine, input) => engine.stdin.write(input + "\n")
