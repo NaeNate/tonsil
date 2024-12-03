@@ -37,6 +37,8 @@ document.querySelector("#start").addEventListener("click", () => {
     fen,
   })
 
+  document.querySelectorAll(".piece").forEach((piece) => piece.remove())
+
   fen
     .split(" ")[0]
     .split("/")
@@ -52,11 +54,13 @@ document.querySelector("#start").addEventListener("click", () => {
           board.children[row * 8 + col].appendChild(piece)
 
           col += 1
-        } else {
-          col += parseInt(char)
-        }
+        } else col += parseInt(char)
       }
     })
+})
+
+document.querySelector("#stop").addEventListener("click", () => {
+  socket.emit("stop")
 })
 
 const boardIndex = (coord) => {
@@ -81,6 +85,8 @@ socket.on("engine", ({ side, out }) => {
 
       const piece = board.children[from].children[0]
       board.children[from].removeChild(piece)
+
+      board.children[to].innerHTML = ""
       board.children[to].appendChild(piece)
     }
   }

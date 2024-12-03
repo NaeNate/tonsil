@@ -8,15 +8,20 @@ const app = express()
 const server = createServer(app)
 const io = new Server(server)
 
-let chess = null
-let sides = { white: null, black: null }
-let start = false
-let log = ["position", "startpos", "moves"]
+const write = (engine, input) => engine.stdin.write(input + "\n")
+const reset = (fen) => {
+  chess = fen ? new Chess(fen) : new Chess()
+  sides = { white: null, black: null }
+  log = ["position", "startpos", "moves"]
+  ready = false
+}
+
+let chess, sides, log, ready
+reset()
 
 io.on("connection", (socket) => {
   socket.on("start", ({ white, black, fen }) => {
-    chess = new Chess(fen)
-    sides = { white: null, black: null }
+    reset(fen)
 
     for (const [index, path] of [white, black].entries()) {
       if (path) {
@@ -31,12 +36,15 @@ io.on("connection", (socket) => {
       }
     }
   })
+
+  socket.on("stop", () => {
+    if (sides.white) write(sides.white, "quit")
+    if (sides.black) write(sides.black, "quit")
+  })
 })
 
 const handle = (side, out) => {
   out = out.trim()
-
-  io.emit("engine", { side, out })
 
   out.split("\n").forEach((line) => {
     const parts = line.split(" ")
@@ -47,11 +55,11 @@ const handle = (side, out) => {
     } else if (command === "readyok") {
       write(sides[side], "ucinewgame")
 
-      if (start) {
+      if (ready) {
         write(sides.white, "position startpos")
         write(sides.white, "go")
       } else {
-        start = true
+        ready = true
       }
     } else if (command === "bestmove") {
       chess.move(parts[1])
@@ -65,14 +73,17 @@ const handle = (side, out) => {
         log.push(parts[1])
 
         let other = side === "white" ? "black" : "white"
-        write(sides[other], log.join(" "))
-        write(sides[other], "go")
+
+        setTimeout(() => {
+          write(sides[other], log.join(" "))
+          write(sides[other], "go")
+        }, 1000)
       }
     }
   })
-}
 
-const write = (engine, input) => engine.stdin.write(input + "\n")
+  io.emit("engine", { side, out })
+}
 
 app.use(express.static("public"))
 server.listen(3000)
