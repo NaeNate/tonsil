@@ -11,6 +11,11 @@ input {
   margin: 20px auto 0;
 }
 
+#win {
+  font-size: 32px;
+  text-align: center;
+}
+
 .square {
   display: flex;
   align-items: center;
